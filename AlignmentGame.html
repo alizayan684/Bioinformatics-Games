@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Alignment Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .game-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .sequence-input {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .sequence-input input {
+            width: 45%;
+            padding: 8px;
+            font-size: 16px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .matrix-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+        td {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            border: 1px solid #ddd;
+            position: relative;
+            cursor: pointer;
+        }
+        .seq1 {
+            background-color: #eaf2f8;
+            font-weight: bold;
+        }
+        .seq2 {
+            background-color: #eaf2f8;
+            font-weight: bold;
+        }
+        .current {
+            background-color: #f9e79f !important;
+        }
+        .path {
+            background-color: #d5f5e3;
+        }
+        .max-score {
+            background-color: #abebc6;
+            font-weight: bold;
+        }
+        .explanation {
+            background-color: #fef9e7;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            border-left: 4px solid #f1c40f;
+        }
+        .scoring-settings {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .scoring-settings div {
+            display: flex;
+            flex-direction: column;
+        }
+        .scoring-settings label {
+            margin-bottom: 5px;
+        }
+        .alignment-result {
+            font-family: monospace;
+            font-size: 18px;
+            line-height: 1.5;
+            text-align: center;
+            margin: 20px 0;
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .match {
+            color: green;
+            font-weight: bold;
+        }
+        .mismatch {
+            color: #e74c3c;
+        }
+        .gap {
+            color: #7f8c8d;
+        }
+        /* Celebration popup styles */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+        .celebration-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 80%;
+            animation: bounce 0.5s;
+        }
+        .celebration h2 {
+            color: #e74c3c;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .celebration p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .celebration button {
+            background-color: #2ecc71;
+            font-size: 1.2em;
+            padding: 10px 20px;
+        }
+        /* Guess dialog styles */
+        .guess-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1001;
+            width: 300px;
+        }
+        .guess-dialog h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .guess-dialog input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .guess-dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: confettiFall 5s linear forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        /* Wrong guess popup styles */
+        .wrong-guess {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+        .wrong-guess-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 80%;
+            animation: shake 0.5s;
+            border-left: 5px solid #e74c3c;
+        }
+        .wrong-guess h2 {
+            color: #e74c3c;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .wrong-guess p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .wrong-guess button {
+            background-color: #e74c3c;
+            font-size: 1.2em;
+            padding: 10px 20px;
+        }
+        .calculation-details {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: left;
+            font-family: monospace;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Local Alignment Game</h1>
+    
+    <div class="game-container">
+        <p>This interactive game demonstrates the concept of local sequence alignment in bioinformatics, which is used to find regions of similarity between sequences.</p>
+        
+        <div class="scoring-settings">
+            <div>
+                <label for="match-score">Match Score:</label>
+                <input type="number" id="match-score" value="2" min="1">
+            </div>
+            <div>
+                <label for="mismatch-penalty">Mismatch Penalty:</label>
+                <input type="number" id="mismatch-penalty" value="-1" max="0">
+            </div>
+            <div>
+                <label for="gap-penalty">Gap Penalty:</label>
+                <input type="number" id="gap-penalty" value="-2" max="0">
+            </div>
+        </div>
+        
+        <div class="sequence-input">
+            <input type="text" id="sequence1" placeholder="Enter first sequence (e.g., ATCG)" value="GATTACA">
+            <input type="text" id="sequence2" placeholder="Enter second sequence (e.g., ATGC)" value="GTCGACG">
+        </div>
+        
+        <div class="controls">
+            <button id="init-btn">Initialize Matrix</button>
+            <button id="step-btn" disabled>Next Step</button>
+            <button id="back-btn" disabled>Back Step</button>
+            <button id="auto-btn" disabled>Auto Run</button>
+            <button id="reset-btn">Reset</button>
+            <button id="guess-mode-btn" disabled>Enable Guess Mode</button>
+        </div>
+        
+        <div class="matrix-container">
+            <div id="matrix"></div>
+        </div>
+        
+        <div class="alignment-result" id="alignment-result" style="display: none;">
+            <h3>Optimal Local Alignment</h3>
+            <div id="alignment-seq1"></div>
+            <div id="alignment-match"></div>
+            <div id="alignment-seq2"></div>
+            <p>Alignment Score: <span id="alignment-score"></span></p>
+        </div>
+        
+        <div class="explanation" id="explanation">
+            <h3>How Local Alignment Works</h3>
+            <p>Local alignment finds regions of similarity between two sequences. Unlike global alignment, it doesn't force the entire sequences to align.</p>
+            <p><strong>Key concepts:</strong></p>
+            <ul>
+                <li>We build a scoring matrix where each cell represents the best alignment ending at that position</li>
+                <li>For each cell, we calculate three possibilities: match/mismatch, gap in sequence 1, or gap in sequence 2</li>
+                <li>Unlike global alignment, we never allow negative scores (they're set to 0)</li>
+                <li>The highest score in the matrix identifies the best local alignment</li>
+                <li>We trace back from the highest score to find the alignment</li>
+            </ul>
+            <p>Click "Initialize Matrix" to begin the demonstration.</p>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let matrix = [];
+        let rows = 0;
+        let cols = 0;
+        let seq1 = "";
+        let seq2 = "";
+        let currentStep = 0;
+        let maxScore = 0;
+        let maxPos = {i: 0, j: 0};
+        let autoRunInterval = null;
+        let tracebackPath = [];
+        let tracebackStep = 0;
+        let isTraceback = false;
+        let isGuessMode = false;
+        let stepHistory = [];
+        let currentHistoryIndex = -1;
+        let currentGuessCell = null;
+        let currentHighlight = {i: -1, j: -1};
+
+        // DOM elements
+        const seq1Input = document.getElementById('sequence1');
+        const seq2Input = document.getElementById('sequence2');
+        const initBtn = document.getElementById('init-btn');
+        const stepBtn = document.getElementById('step-btn');
+        const backBtn = document.getElementById('back-btn');
+        const autoBtn = document.getElementById('auto-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const guessModeBtn = document.getElementById('guess-mode-btn');
+        const matrixDiv = document.getElementById('matrix');
+        const explanationDiv = document.getElementById('explanation');
+        const alignmentResult = document.getElementById('alignment-result');
+        const alignmentSeq1 = document.getElementById('alignment-seq1');
+        const alignmentSeq2 = document.getElementById('alignment-seq2');
+        const alignmentMatch = document.getElementById('alignment-match');
+        const alignmentScore = document.getElementById('alignment-score');
+        const matchScoreInput = document.getElementById('match-score');
+        const mismatchPenaltyInput = document.getElementById('mismatch-penalty');
+        const gapPenaltyInput = document.getElementById('gap-penalty');
+
+        // Event listeners
+        initBtn.addEventListener('click', initializeMatrix);
+        stepBtn.addEventListener('click', nextStep);
+        backBtn.addEventListener('click', previousStep);
+        autoBtn.addEventListener('click', toggleAutoRun);
+        resetBtn.addEventListener('click', resetGame);
+        guessModeBtn.addEventListener('click', toggleGuessMode);
+
+        function initializeMatrix() {
+            seq1 = seq1Input.value.toUpperCase().replace(/[^ACGT]/g, '');
+            seq2 = seq2Input.value.toUpperCase().replace(/[^ACGT]/g, '');
+            const matchScore = parseInt(matchScoreInput.value);
+            const mismatchPenalty = parseInt(mismatchPenaltyInput.value);
+            const gapPenalty = parseInt(gapPenaltyInput.value);
+
+            if (!seq1 || !seq2) {
+                alert("Please enter valid DNA sequences (A, C, G, T)");
+                return;
+            }
+
+            resetGameState();
+            rows = seq2.length + 1;
+            cols = seq1.length + 1;
+            matrix = Array(rows).fill().map(() => Array(cols).fill(0));
+            saveToHistory();
+            updateMatrixDisplay();
+            stepBtn.disabled = false;
+            backBtn.disabled = true;
+            autoBtn.disabled = false;
+            guessModeBtn.disabled = false;
+
+            explanationDiv.innerHTML = `
+                <h3>Initialization</h3>
+                <p>We've created a scoring matrix with ${rows} rows and ${cols} columns.</p>
+                <p>The first row and column are initialized to 0 (unlike global alignment where we use gap penalties).</p>
+                <p>Click "Next Step" to begin filling the matrix.</p>
+                <p>Try enabling "Guess Mode" to test your understanding by predicting cell values!</p>
+            `;
+            currentStep = 1;
+        }
+
+        function resetGameState() {
+            matrix = [];
+            currentStep = 0;
+            maxScore = 0;
+            maxPos = {i: 0, j: 0};
+            clearInterval(autoRunInterval);
+            autoRunInterval = null;
+            autoBtn.textContent = "Auto Run";
+            isTraceback = false;
+            tracebackPath = [];
+            tracebackStep = 0;
+            isGuessMode = false;
+            guessModeBtn.textContent = "Enable Guess Mode";
+            alignmentResult.style.display = "none";
+            stepHistory = [];
+            currentHistoryIndex = -1;
+            currentGuessCell = null;
+        }
+
+        function resetGame() {
+            resetGameState();
+            matrixDiv.innerHTML = "";
+            stepBtn.disabled = true;
+            backBtn.disabled = true;
+            autoBtn.disabled = true;
+            guessModeBtn.disabled = true;
+            explanationDiv.innerHTML = `
+                <h3>How Local Alignment Works</h3>
+                <p>Local alignment finds regions of similarity between two sequences. Unlike global alignment, it doesn't force the entire sequences to align.</p>
+                <p><strong>Key concepts:</strong></p>
+                <ul>
+                    <li>We build a scoring matrix where each cell represents the best alignment ending at that position</li>
+                    <li>For each cell, we calculate three possibilities: match/mismatch, gap in sequence 1, or gap in sequence 2</li>
+                    <li>Unlike global alignment, we never allow negative scores (they're set to 0)</li>
+                    <li>The highest score in the matrix identifies the best local alignment</li>
+                    <li>We trace back from the highest score to find the alignment</li>
+                </ul>
+                <p>Click "Initialize Matrix" to begin the demonstration.</p>
+            `;
+        }
+
+        function saveToHistory() {
+            const currentState = {
+                matrix: JSON.parse(JSON.stringify(matrix)),
+                currentStep,
+                maxScore,
+                maxPos: {...maxPos},
+                isTraceback,
+                tracebackPath: [...tracebackPath],
+                tracebackStep,
+                highlight: {...currentHighlight}
+            };
+            if (currentHistoryIndex < stepHistory.length - 1) {
+                stepHistory = stepHistory.slice(0, currentHistoryIndex + 1);
+            }
+            stepHistory.push(currentState);
+            currentHistoryIndex = stepHistory.length - 1;
+            backBtn.disabled = currentHistoryIndex <= 0;
+        }
+
+        function restoreFromHistory(index) {
+            const state = stepHistory[index];
+            matrix = JSON.parse(JSON.stringify(state.matrix));
+            currentStep = state.currentStep;
+            maxScore = state.maxScore;
+            maxPos = {...state.maxPos};
+            isTraceback = state.isTraceback;
+            tracebackPath = [...state.tracebackPath];
+            tracebackStep = state.tracebackStep;
+            currentHistoryIndex = index;
+            currentHighlight = state.highlight || {i: -1, j: -1};
+            updateMatrixDisplay(currentHighlight.i, currentHighlight.j);
+            backBtn.disabled = currentHistoryIndex <= 0;
+            stepBtn.disabled = false;
+            autoBtn.disabled = false;
+            if (isTraceback && tracebackStep >= tracebackPath.length) {
+                showAlignment();
+            }
+        }
+
+        function previousStep() {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                restoreFromHistory(currentHistoryIndex);
+            }
+        }
+
+        function nextStep() {
+            if (currentHistoryIndex < stepHistory.length - 1) {
+                currentHistoryIndex++;
+                restoreFromHistory(currentHistoryIndex);
+                return;
+            }
+            if (isTraceback) {
+                performTracebackStep();
+                return;
+            }
+            const matchScore = parseInt(matchScoreInput.value);
+            const mismatchPenalty = parseInt(mismatchPenaltyInput.value);
+            const gapPenalty = parseInt(gapPenaltyInput.value);
+            const step = currentStep;
+            let i = Math.floor((step - 1) / (cols - 1)) + 1;
+            let j = ((step - 1) % (cols - 1)) + 1;
+            if (i >= rows || j >= cols) {
+                startTraceback();
+                return;
+            }
+            const diagonal = matrix[i-1][j-1] + (seq1[j-1] === seq2[i-1] ? matchScore : mismatchPenalty);
+            const up = matrix[i-1][j] + gapPenalty;
+            const left = matrix[i][j-1] + gapPenalty;
+            const score = Math.max(0, diagonal, up, left);
+            matrix[i][j] = score;
+            currentHighlight = {i, j};
+            if (score > maxScore) {
+                maxScore = score;
+                maxPos = {i, j};
+            }
+            saveToHistory();
+            updateMatrixDisplay(i, j);
+            // Update explanation
+            const base1 = seq1[j-1];
+            const base2 = seq2[i-1];
+            const isMatch = base1 === base2;
+            explanationDiv.innerHTML = `
+                <h3>Filling the Matrix (Step ${currentStep})</h3>
+                <p>Calculating score for cell (${i}, ${j}) where sequence1 has '${base1}' and sequence2 has '${base2}':</p>
+                <ul>
+                    <li>Diagonal (match/mismatch): ${matrix[i-1][j-1]} + ${isMatch ? matchScore : mismatchPenalty} = ${diagonal}</li>
+                    <li>Up (gap in sequence1): ${matrix[i-1][j]} + ${gapPenalty} = ${up}</li>
+                    <li>Left (gap in sequence2): ${matrix[i][j-1]} + ${gapPenalty} = ${left}</li>
+                </ul>
+                <p>Best score is ${score} (with 0 as minimum).</p>
+                ${score === 0 ? "<p>Since all options were negative, we set this to 0 (key difference from global alignment).</p>" : ""}
+            `;
+            
+            currentStep++;
+        }
+
+        function startTraceback() {
+            isTraceback = true;
+            tracebackStep = 0;
+            const maxCells = [];
+            for (let i = 1; i < rows; i++) {
+                for (let j = 1; j < cols; j++) {
+                    if (matrix[i][j] === maxScore) {
+                        maxCells.push({i, j});
+                    }
+                }
+            }
+            if (maxCells.length > 0) {
+                maxPos = maxCells[0];
+                tracebackPath = findTracebackPath(maxPos.i, maxPos.j);
+            }
+            saveToHistory();
+            explanationDiv.innerHTML = `
+                <h3>Matrix Filled - Starting Traceback</h3>
+                <p>The matrix is complete! The highest score is ${maxScore} at position (${maxPos.i}, ${maxPos.j}).</p>
+                <p>Now we'll trace back from this position to find the optimal local alignment.</p>
+                <p>Click "Next Step" to follow the traceback path.</p>
+            `;
+            updateMatrixDisplay();
+        }
+
+        function findTracebackPath(i, j) {
+            const path = [];
+            let currentI = i;
+            let currentJ = j;
+            while (currentI > 0 && currentJ > 0 && matrix[currentI][currentJ] > 0) {
+                path.push({i: currentI, j: currentJ});
+                const currentScore = matrix[currentI][currentJ];
+                const diagonal = matrix[currentI-1][currentJ-1];
+                const up = matrix[currentI-1][currentJ];
+                const left = matrix[currentI][currentJ-1];
+                if (currentScore === diagonal + (seq1[currentJ-1] === seq2[currentI-1] ? parseInt(matchScoreInput.value) : parseInt(mismatchPenaltyInput.value))) {
+                    currentI--;
+                    currentJ--;
+                } else if (currentScore === up + parseInt(gapPenaltyInput.value)) {
+                    currentI--;
+                } else if (currentScore === left + parseInt(gapPenaltyInput.value)) {
+                    currentJ--;
+                } else {
+                    break;
+                }
+            }
+            return path;
+        }
+
+        function performTracebackStep() {
+            if (tracebackStep >= tracebackPath.length) {
+                showAlignment();
+                return;
+            }
+            const {i, j} = tracebackPath[tracebackStep];
+            updateMatrixDisplay(i, j, true);
+            explanationDiv.innerHTML = `
+                <h3>Traceback (Step ${tracebackStep + 1})</h3>
+                <p>At position (${i}, ${j}) with score ${matrix[i][j]}.</p>
+                <p>Sequence1 character: ${seq1[j-1]}, Sequence2 character: ${seq2[i-1]}.</p>
+                <p>Following the path back to where the alignment began (score = 0).</p>
+            `;
+            tracebackStep++;
+            saveToHistory();
+        }
+
+        function showAlignment() {
+            let alignedSeq1 = "";
+            let alignedSeq2 = "";
+            let matchLine = "";
+            let currentI = maxPos.i;
+            let currentJ = maxPos.j;
+            while (currentI > 0 && currentJ > 0 && matrix[currentI][currentJ] > 0) {
+                const currentScore = matrix[currentI][currentJ];
+                const diagonal = matrix[currentI-1][currentJ-1];
+                const up = matrix[currentI-1][currentJ];
+                const left = matrix[currentI][currentJ-1];
+                const matchScore = parseInt(matchScoreInput.value);
+                const mismatchPenalty = parseInt(mismatchPenaltyInput.value);
+                const gapPenalty = parseInt(gapPenaltyInput.value);
+                if (currentScore === diagonal + (seq1[currentJ-1] === seq2[currentI-1] ? matchScore : mismatchPenalty)) {
+                    alignedSeq1 = seq1[currentJ-1] + alignedSeq1;
+                    alignedSeq2 = seq2[currentI-1] + alignedSeq2;
+                    matchLine = (seq1[currentJ-1] === seq2[currentI-1] ? "|" : " ") + matchLine;
+                    currentI--;
+                    currentJ--;
+                } else if (currentScore === up + gapPenalty) {
+                    alignedSeq1 = "-" + alignedSeq1;
+                    alignedSeq2 = seq2[currentI-1] + alignedSeq2;
+                    matchLine = " " + matchLine;
+                    currentI--;
+                } else if (currentScore === left + gapPenalty) {
+                    alignedSeq1 = seq1[currentJ-1] + alignedSeq1;
+                    alignedSeq2 = "-" + alignedSeq2;
+                    matchLine = " " + matchLine;
+                    currentJ--;
+                }
+            }
+            alignmentSeq1.innerHTML = formatAlignmentString(alignedSeq1, 'seq1');
+            alignmentSeq2.innerHTML = formatAlignmentString(alignedSeq2, 'seq2');
+            alignmentMatch.textContent = matchLine;
+            alignmentScore.textContent = maxScore;
+            alignmentResult.style.display = "block";
+            explanationDiv.innerHTML = `
+                <h3>Alignment Complete!</h3>
+                <p>We've found the optimal local alignment with score ${maxScore}.</p>
+                <p>The alignment shows the most similar region between the two sequences.</p>
+                <p>Key points about local alignment:</p>
+                <ul>
+                    <li>Only aligns similar regions, ignoring dissimilar parts</li>
+                    <li>Alignment can start and end anywhere in the sequences</li>
+                    <li>Negative scores are set to 0, creating "islands" of positive scores</li>
+                    <li>Used in tools like BLAST to find similar regions in large sequences</li>
+                </ul>
+                <p>Click "Reset" to try with different sequences or parameters.</p>
+            `;
+            stepBtn.disabled = true;
+            autoBtn.disabled = true;
+            backBtn.disabled = currentHistoryIndex <= 0;
+        }
+
+        function formatAlignmentString(seq, type) {
+            return seq.split('').map((char, index) => {
+                if (char === '-') {
+                    return `<span class="gap">${char}</span>`;
+                } else if (type === 'seq1' && seq2[maxPos.i - (seq.length - index)] === char) {
+                    return `<span class="match">${char}</span>`;
+                } else if (type === 'seq2' && seq1[maxPos.j - (seq.length - index)] === char) {
+                    return `<span class="match">${char}</span>`;
+                } else {
+                    return `<span class="mismatch">${char}</span>`;
+                }
+            }).join('');
+        }
+
+        function updateMatrixDisplay(highlightI = -1, highlightJ = -1, isPath = false) {
+            let tableHTML = "<table>";
+            tableHTML += "<tr><td></td><td></td>";
+            for (let j = 0; j < seq1.length; j++) {
+                tableHTML += `<td class="seq1">${seq1[j]}</td>`;
+            }
+            tableHTML += "</tr>";
+            for (let i = 0; i < rows; i++) {
+                tableHTML += "<tr>";
+                if (i === 0) {
+                    tableHTML += "<td></td>";
+                } else {
+                    tableHTML += `<td class="seq2">${seq2[i-1]}</td>`;
+                }
+                for (let j = 0; j < cols; j++) {
+                    let cellClass = "";
+                    let cellContent = matrix[i]?.[j] ?? "";
+                    if (i === 0 || j === 0) {
+                        cellClass = "seq1 seq2";
+                        cellContent = cellContent !== "" ? cellContent : "0";
+                    }
+                    if (isTraceback && tracebackPath.some(pos => pos.i === i && pos.j === j)) {
+                        cellClass += " path";
+                    }
+                    if (i === maxPos.i && j === maxPos.j && !isPath) {
+                        cellClass += " max-score";
+                    }
+                    if (i === highlightI && j === highlightJ) {
+                        cellClass += " current";
+                    }
+                    const onClick = isGuessMode && i > 0 && j > 0 && matrix[i][j] === 0 && 
+                                  !(i === 0 || j === 0) ? `onclick="handleCellClick(${i}, ${j})"` : "";
+                    tableHTML += `<td class="${cellClass.trim()}" ${onClick}>${cellContent}</td>`;
+                }
+                tableHTML += "</tr>";
+            }
+            tableHTML += "</table>";
+            matrixDiv.innerHTML = tableHTML;
+        }
+
+        function toggleGuessMode() {
+            isGuessMode = !isGuessMode;
+            guessModeBtn.textContent = isGuessMode ? "Exit Guess Mode" : "Enable Guess Mode";
+            updateMatrixDisplay();
+            if (isGuessMode) {
+                explanationDiv.innerHTML = `
+                    <h3>Guess Mode Activated</h3>
+                    <p>Now you can test your understanding by predicting the values of empty cells!</p>
+                    <p>Click on any empty (non-header) cell that shows 0 to enter your guess for what its value should be.</p>
+                    <p>If you guess correctly, you'll get a fun celebration!</p>
+                `;
+            } else {
+                explanationDiv.innerHTML = `
+                    <h3>Guess Mode Deactivated</h3>
+                    <p>You can continue stepping through the alignment process normally.</p>
+                `;
+            }
+        }
+
+        function handleCellClick(i, j) {
+            if (!isGuessMode) return;
+            const existingDialog = document.querySelector('.guess-dialog');
+            if (existingDialog) {
+                cancelGuess(existingDialog);
+            }
+            currentGuessCell = {i, j};
+            showGuessDialog();
+        }
+
+        function showGuessDialog() {
+            if (!currentGuessCell) return;
+            const dialog = document.createElement('div');
+            dialog.className = 'guess-dialog';
+            dialog.innerHTML = `
+                <h3>Enter Your Guess</h3>
+                <p>What should the value be for cell (${currentGuessCell.i}, ${currentGuessCell.j})?</p>
+                <input type="number" class="guess-input" placeholder="Enter your guess">
+                <div class="guess-dialog-buttons">
+                    <button onclick="cancelGuess(this.closest('.guess-dialog'))">Cancel</button>
+                    <button onclick="submitGuess(this.closest('.guess-dialog'))" style="background-color: #2ecc71">Submit</button>
+                </div>
+            `;
+            dialog.dataset.i = currentGuessCell.i;
+            dialog.dataset.j = currentGuessCell.j;
+            document.body.appendChild(dialog);
+            dialog.querySelector('.guess-input').focus();
+        }
+
+        function cancelGuess(dialog) {
+            if (dialog && dialog.parentNode) {
+                document.body.removeChild(dialog);
+            }
+        }
+
+        function submitGuess(dialog) {
+            if (!dialog) return;
+            const input = dialog.querySelector('.guess-input');
+            if (!input) return;
+            const i = parseInt(dialog.dataset.i);
+            const j = parseInt(dialog.dataset.j);
+            const inputValue = input.value.trim();
+            if (inputValue === "") {
+                alert("Please enter a number");
+                return;
+            }
+            const guessedValue = parseInt(inputValue);
+            if (isNaN(guessedValue)) {
+                alert("Please enter a valid number");
+                return;
+            }
+            checkGuess(i, j, guessedValue);
+            cancelGuess(dialog);
+        }
+
+        function checkGuess(i, j, guessedValue) {
+            const matchScore = parseInt(matchScoreInput.value);
+            const mismatchPenalty = parseInt(mismatchPenaltyInput.value);
+            const gapPenalty = parseInt(gapPenaltyInput.value);
+            const diagonal = matrix[i-1][j-1] + (seq1[j-1] === seq2[i-1] ? matchScore : mismatchPenalty);
+            const up = matrix[i-1][j] + gapPenalty;
+            const left = matrix[i][j-1] + gapPenalty;
+            const correctValue = Math.max(0, diagonal, up, left);
+            if (guessedValue === correctValue) {
+                showCelebration();
+                matrix[i][j] = correctValue;
+                saveToHistory();
+                updateMatrixDisplay();
+                if (correctValue > maxScore) {
+                    maxScore = correctValue;
+                    maxPos = {i, j};
+                }
+            } else {
+                showWrongGuess(diagonal, up, left, correctValue);
+            }
+        }
+
+        function showCelebration() {
+            const popup = document.createElement('div');
+            popup.className = 'celebration';
+            popup.innerHTML = `
+                <div class="celebration-content">
+                    <h2>🎉 Correct! 🎉</h2>
+                    <p>You've mastered this cell calculation!</p>
+                    <button onclick="closeCelebration()">Awesome!</button>
+                </div>
+            `;
+            popup.id = 'celebration-popup';
+            document.body.appendChild(popup);
+            createConfetti(50);
+        }
+
+        function closeCelebration() {
+            const popup = document.getElementById('celebration-popup');
+            if (popup) {
+                document.body.removeChild(popup);
+            }
+        }
+
+        function showWrongGuess(diagonal, up, left, correctValue) {
+            const popup = document.createElement('div');
+            popup.className = 'wrong-guess';
+            popup.innerHTML = `
+                <div class="wrong-guess-content">
+                    <h2>❌ Try Again! ❌</h2>
+                    <p>That's not quite right. Here's how it's calculated:</p>
+                    <div class="calculation-details">
+                        <p>Diagonal: ${diagonal}</p>
+                        <p>Up: ${up}</p>
+                        <p>Left: ${left}</p>
+                        <p>Maximum (with 0 as minimum): ${correctValue}</p>
+                    </div>
+                    <button onclick="closeWrongGuess()">I'll Try Again</button>
+                </div>
+            `;
+            popup.id = 'wrong-guess-popup';
+            document.body.appendChild(popup);
+        }
+
+        function closeWrongGuess() {
+            const popup = document.getElementById('wrong-guess-popup');
+            if (popup) {
+                document.body.removeChild(popup);
+            }
+        }
+
+        function createConfetti(count) {
+            for (let i = 0; i < count; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = getRandomColor();
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.animationDuration = `${3 + Math.random() * 3}s`;
+                document.body.appendChild(confetti);
+                setTimeout(() => {
+                    if (confetti.parentNode) {
+                        document.body.removeChild(confetti);
+                    }
+                }, 5000);
+            }
+        }
+
+        function getRandomColor() {
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5',
+                          '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50',
+                          '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function toggleAutoRun() {
+            if (autoRunInterval) {
+                clearInterval(autoRunInterval);
+                autoRunInterval = null;
+                autoBtn.textContent = "Auto Run";
+                stepBtn.disabled = false;
+                backBtn.disabled = currentHistoryIndex <= 0;
+            } else {
+                autoRunInterval = setInterval(() => {
+                    if (isTraceback && tracebackStep >= tracebackPath.length) {
+                        clearInterval(autoRunInterval);
+                        autoRunInterval = null;
+                        autoBtn.textContent = "Auto Run";
+                        return;
+                    }
+                    nextStep();
+                }, 200);
+                autoBtn.textContent = "Stop Auto Run";
+                stepBtn.disabled = true;
+                backBtn.disabled = true;
+            }
+        }
+
+        window.handleCellClick = handleCellClick;
+        window.cancelGuess = cancelGuess;
+        window.submitGuess = submitGuess;
+        window.closeCelebration = closeCelebration;
+        window.createConfetti = createConfetti;
+        window.closeWrongGuess = closeWrongGuess;
+    </script>
+</body>
+</html>
