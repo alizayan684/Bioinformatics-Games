@@ -23,7 +23,7 @@ This game demonstrates how local sequence alignment works in bioinformatics to f
 
 ## 🎥 Demo Video
 
-[![Local Alignment Game Demo](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID)  
+[Local Alignment Game Demo](https://drive.google.com/file/d/1Cmu2xqMTdDUD_JEM-9TBcvv6stozYiex/view?usp=drive_link)  
 *(Click to watch the gameplay video)*
 
 ## 🧪 How to Play
