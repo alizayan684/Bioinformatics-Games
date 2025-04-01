@@ -21,10 +21,10 @@ This game demonstrates how local sequence alignment works in bioinformatics to f
 - **Works everywhere** - One HTML file works on phones and desktop directly in the browser
 
 
-## 🎥 Demo Video
+## 🎥 Demo
 
-![Local Alignment Game Demo](https://drive.google.com/file/d/1D-oJbjVC6NB7e-IZeymcFqXAjq8F9QRC/view?usp=drive_link)  
-*(Click to watch the gameplay video)*
+[Game Demo](https://alizayan684.github.io/Bioinformatics-Games/)  
+*(Click to play the game )*
 
 ## 🧪 How to Play
 
