@@ -1,4 +1,4 @@
-# 🧬 Local Alignment Game - README
+# 🧬 Local Alignment Game
 
 Welcome to the **Local Alignment Game** - where bioinformatics meets fun! This interactive tool helps you understand the Smith-Waterman algorithm for local sequence alignment through hands-on visualization.
 
