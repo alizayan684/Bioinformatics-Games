@@ -7,7 +7,6 @@ Welcome to the **Local Alignment Game** - where bioinformatics meets fun! This i
 This game demonstrates how local sequence alignment works in bioinformatics to find regions of similarity between DNA sequences. Unlike global alignment (which you might know from Needleman-Wunsch), local alignment finds the best matching subsequences without forcing the entire sequences to align.
 
 ![Game Screenshot](https://media.giphy.com/media/Ln2dAW9oycjgmTpjX9/giphy.gif)  
-*"When your sequences finally align perfectly"*
 
 ## 🚀 Features
 
