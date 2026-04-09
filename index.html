@@ -5,133 +5,335 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Local Alignment Game</title>
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-hover: #3a56d4;
+            --secondary-color: #7209b7;
+            --success-color: #06d6a0;
+            --warning-color: #ffd166;
+            --danger-color: #ef476f;
+            --info-color: #118ab2;
+            --dark-color: #073b4c;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-radius: 12px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            max-width: 900px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1100px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-            color: #333;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #2d3436;
+            line-height: 1.6;
         }
+
         h1 {
-            color: #2c3e50;
+            color: white;
             text-align: center;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: -1px;
         }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
         .game-container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
             margin-bottom: 20px;
+            backdrop-filter: blur(10px);
         }
+
+        .game-container p {
+            color: #555;
+            font-size: 1.05em;
+            line-height: 1.7;
+        }
+
         .sequence-input {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .sequence-input input {
-            width: 45%;
-            padding: 8px;
-            font-size: 16px;
-        }
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 20px;
+            margin-bottom: 25px;
             flex-wrap: wrap;
         }
-        button {
-            padding: 10px 15px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+
+        .sequence-input input {
+            width: 48%;
+            min-width: 200px;
+            padding: 14px 18px;
             font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: var(--transition);
+            background-color: #fafafa;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
         }
-        button:hover {
-            background-color: #2980b9;
+
+        .sequence-input input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
         }
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
+
+        .sequence-input input::placeholder {
+            color: #aaa;
+            font-style: italic;
         }
-        .matrix-container {
-            overflow-x: auto;
-            margin-bottom: 20px;
-        }
-        table {
-            border-collapse: collapse;
-            margin: 0 auto;
-        }
-        td {
-            width: 40px;
-            height: 40px;
-            text-align: center;
-            border: 1px solid #ddd;
-            position: relative;
-            cursor: pointer;
-        }
-        .seq1 {
-            background-color: #eaf2f8;
-            font-weight: bold;
-        }
-        .seq2 {
-            background-color: #eaf2f8;
-            font-weight: bold;
-        }
-        .current {
-            background-color: #f9e79f !important;
-        }
-        .path {
-            background-color: #d5f5e3;
-        }
-        .max-score {
-            background-color: #abebc6;
-            font-weight: bold;
-        }
-        .explanation {
-            background-color: #fef9e7;
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 20px;
-            border-left: 4px solid #f1c40f;
-        }
+
         .scoring-settings {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 25px;
+            margin-bottom: 25px;
             flex-wrap: wrap;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            padding: 20px;
+            border-radius: var(--border-radius);
         }
+
         .scoring-settings div {
             display: flex;
             flex-direction: column;
+            min-width: 140px;
         }
+
         .scoring-settings label {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.95em;
         }
-        .alignment-result {
-            font-family: monospace;
-            font-size: 18px;
-            line-height: 1.5;
+
+        .scoring-settings input {
+            padding: 10px 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: var(--transition);
+            background-color: white;
+        }
+
+        .scoring-settings input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 22px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: linear-gradient(135deg, #bdc3c7, #95a5a6);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        #guess-mode-btn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        #auto-btn.active {
+            background: linear-gradient(135deg, #f5af19, #f12711);
+        }
+
+        .matrix-container {
+            overflow-x: auto;
+            margin-bottom: 25px;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: var(--border-radius);
+            border: 1px solid #eee;
+        }
+
+        table {
+            border-collapse: separate;
+            border-spacing: 2px;
+            margin: 0 auto;
+        }
+
+        td {
+            width: 45px;
+            height: 45px;
             text-align: center;
-            margin: 20px 0;
-            background-color: #e8f4f8;
-            padding: 15px;
-            border-radius: 5px;
+            border: 2px solid #e0e0e0;
+            position: relative;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: var(--transition);
+            font-weight: 500;
+            font-size: 14px;
+            background-color: white;
         }
-        .match {
-            color: green;
+
+        td:hover:not(.seq1):not(.seq2) {
+            transform: scale(1.1);
+            border-color: var(--primary-color);
+            z-index: 10;
+        }
+
+        .seq1,
+        .seq2 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-weight: bold;
+            cursor: default;
+        }
+
+        .current {
+            background: linear-gradient(135deg, #ffd166, #fca311) !important;
+            animation: pulse 1.5s infinite;
+            border-color: #fca311 !important;
+            transform: scale(1.15);
+            z-index: 5;
+        }
+
+        .path {
+            background: linear-gradient(135deg, #06d6a0, #118ab2);
+            color: white;
             font-weight: bold;
         }
-        .mismatch {
-            color: #e74c3c;
+
+        .max-score {
+            background: linear-gradient(135deg, #ef476f, #ff6b6b);
+            color: white;
+            font-weight: bold;
+            animation: glow 2s infinite;
         }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(252, 163, 17, 0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(252, 163, 17, 0); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(239, 71, 111, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(239, 71, 111, 0.8); }
+        }
+
+        .explanation {
+            background: linear-gradient(135deg, #fef9e7, #fff3cd);
+            padding: 20px 25px;
+            border-radius: var(--border-radius);
+            margin-top: 25px;
+            border-left: 5px solid var(--warning-color);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .explanation h3 {
+            color: var(--dark-color);
+            margin-top: 0;
+            font-size: 1.3em;
+        }
+
+        .explanation ul {
+            padding-left: 20px;
+        }
+
+        .explanation li {
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .alignment-result {
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            line-height: 2;
+            text-align: center;
+            margin: 25px 0;
+            background: linear-gradient(135deg, #e8f4f8, #d0e8f0);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .alignment-result h3 {
+            color: var(--dark-color);
+            margin-top: 0;
+        }
+
+        .match {
+            color: var(--success-color);
+            font-weight: bold;
+            text-shadow: 0 0 2px rgba(6, 214, 160, 0.3);
+        }
+
+        .mismatch {
+            color: var(--danger-color);
+        }
+
         .gap {
             color: #7f8c8d;
         }
+
         /* Celebration popup styles */
         .celebration {
             position: fixed;
@@ -139,83 +341,109 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            animation: fadeIn 0.3s;
+            animation: fadeIn 0.4s ease-out;
         }
+
         .celebration-content {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
             text-align: center;
-            max-width: 80%;
-            animation: bounce 0.5s;
+            max-width: 90%;
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: var(--shadow-lg);
         }
+
         .celebration h2 {
-            color: #e74c3c;
-            font-size: 2em;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
             margin-bottom: 20px;
         }
+
         .celebration p {
-            font-size: 1.2em;
-            margin-bottom: 20px;
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            color: #555;
         }
+
         .celebration button {
-            background-color: #2ecc71;
+            background: linear-gradient(135deg, #06d6a0, #118ab2);
             font-size: 1.2em;
-            padding: 10px 20px;
+            padding: 14px 30px;
         }
+
         /* Guess dialog styles */
         .guess-dialog {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
             z-index: 1001;
-            width: 300px;
+            width: 350px;
+            animation: slideIn 0.4s ease-out;
         }
+
         .guess-dialog h3 {
             margin-top: 0;
-            color: #2c3e50;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.5em;
         }
+
         .guess-dialog input {
             width: 100%;
-            padding: 8px;
-            margin: 10px 0;
-            font-size: 16px;
+            padding: 12px 16px;
+            margin: 15px 0;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            transition: var(--transition);
+            text-align: center;
         }
+
+        .guess-dialog input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+
         .guess-dialog-buttons {
             display: flex;
             justify-content: flex-end;
             gap: 10px;
+            margin-top: 20px;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+
+        .calculation-details {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border: 1px solid #dee2e6;
         }
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-30px); }
-            60% { transform: translateY(-15px); }
+
+        .calculation-details strong {
+            color: var(--primary-color);
         }
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background-color: #f00;
-            animation: confettiFall 5s linear forwards;
-        }
-        @keyframes confettiFall {
-            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-        }
+
         /* Wrong guess popup styles */
         .wrong-guess {
             position: fixed;
@@ -223,53 +451,155 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            animation: fadeIn 0.3s;
+            animation: fadeIn 0.3s ease-out;
         }
+
         .wrong-guess-content {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 10px;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
             text-align: center;
-            max-width: 80%;
-            animation: shake 0.5s;
-            border-left: 5px solid #e74c3c;
+            max-width: 90%;
+            animation: shake 0.5s ease-in-out;
+            border-left: 6px solid var(--danger-color);
+            box-shadow: var(--shadow-lg);
         }
+
         .wrong-guess h2 {
-            color: #e74c3c;
-            font-size: 2em;
+            color: var(--danger-color);
+            font-size: 2.2em;
             margin-bottom: 20px;
         }
+
         .wrong-guess p {
             font-size: 1.2em;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            color: #555;
         }
+
         .wrong-guess button {
-            background-color: #e74c3c;
+            background: linear-gradient(135deg, var(--danger-color), #ff6b6b);
             font-size: 1.2em;
-            padding: 10px 20px;
+            padding: 14px 30px;
         }
-        .calculation-details {
-            background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            text-align: left;
-            font-family: monospace;
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translate(-50%, -60%); opacity: 0; }
+            to { transform: translate(-50%, -50%); opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-30px); }
+            60% { transform: translateY(-15px); }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            animation: confettiFall 5s linear forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .game-container {
+                padding: 20px 15px;
+            }
+
+            .sequence-input {
+                flex-direction: column;
+            }
+
+            .sequence-input input {
+                width: 100%;
+            }
+
+            .scoring-settings {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .scoring-settings div {
+                width: 100%;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .controls button {
+                width: 100%;
+            }
+
+            td {
+                width: 38px;
+                height: 38px;
+                font-size: 12px;
+            }
+        }
+
+        /* Scrollbar styling */
+        .matrix-container::-webkit-scrollbar {
+            height: 10px;
+        }
+
+        .matrix-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        .matrix-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 5px;
+        }
+
+        .matrix-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--primary-hover), var(--secondary-color));
         }
     </style>
 </head>
 <body>
     <h1>Local Alignment Game</h1>
+    <p class="subtitle">Interactive Smith-Waterman Algorithm Visualization</p>
     
     <div class="game-container">
         <p>This interactive game demonstrates the concept of local sequence alignment in bioinformatics, which is used to find regions of similarity between sequences.</p>
@@ -897,6 +1227,7 @@
                 clearInterval(autoRunInterval);
                 autoRunInterval = null;
                 autoBtn.textContent = "Auto Run";
+                autoBtn.classList.remove('active');
                 stepBtn.disabled = false;
                 backBtn.disabled = currentHistoryIndex <= 0;
             } else {
@@ -905,11 +1236,13 @@
                         clearInterval(autoRunInterval);
                         autoRunInterval = null;
                         autoBtn.textContent = "Auto Run";
+                        autoBtn.classList.remove('active');
                         return;
                     }
                     nextStep();
                 }, 200);
                 autoBtn.textContent = "Stop Auto Run";
+                autoBtn.classList.add('active');
                 stepBtn.disabled = true;
                 backBtn.disabled = true;
             }
